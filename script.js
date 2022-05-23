@@ -1,19 +1,21 @@
 const submitButton = document.getElementById("submitButton");
-
-const input = document.getElementById("formFile");
-
 submitButton.setAttributeNode(document.createAttribute("disabled"));
-
+const input = document.getElementById("formFile");
 const formData = new FormData();
+const table = document.getElementById("table");
+
+window.addEventListener("load", async () => {
+  const imports = await getImports();
+  table.innerHTML = tableHTML(imports);
+});
 
 input.addEventListener("change", (changes) => {
   const file = changes.target.files[0];
   disableSubmitButton(file);
-  formData.append("file", changes.target.files[0]);
+  formData.append("file", file);
 });
 
 submitButton.addEventListener("click", async () => {
-  console.log(formData.get("file"));
   await uploadFile(formData);
 });
 
@@ -34,7 +36,16 @@ function disableSubmitButton(file) {
 }
 
 async function uploadFile(formData) {
-  await fetch("/upload/image", { method: "POST", body: formData });
+  return fetch("http://localhost:3000/transactions", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+async function getImports() {
+  return fetch("http://localhost:3000/imports", {
+    method: "GET",
+  }).then((data) => data.json());
 }
 
 function validateAcceptedTypes(file) {
@@ -49,3 +60,27 @@ function validateAcceptedTypes(file) {
 
   return true;
 }
+
+const tableHTML = (imports) => `
+    <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Transaction Date</th>
+        <th scope="col">Import Date</th>
+        <th scope="col">Imported Transactions</th>
+      </tr>
+    </thead>
+    <tbody>
+        ${imports.map(
+          (importData) => `
+         <tr>
+          <th scope="row">${importData.id} </th>
+          <td>${importData.transactions_date}</td>
+          <td>${importData.import_date}</td>
+          <td>${importData.transactions_imported}</td>
+        </tr>`
+        )}
+  </tbody>
+</table>
+  `;
